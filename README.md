@@ -8,6 +8,7 @@ Een minimale Homebridge Docker container gebaseerd op Alpine Linux met Node.js v
 - **Node.js v22**: Laatste LTS versie van Node.js
 - **Homebridge**: Met Homebridge Config UI X voor eenvoudig beheer
 - **Geen onnodige dependencies**: ffmpeg en andere grote packages zijn niet geïnstalleerd
+- **Multi-architecture**: Ondersteunt AMD64 en ARM64 (Raspberry Pi 4)
 
 ## Vereisten
 
@@ -16,7 +17,36 @@ Een minimale Homebridge Docker container gebaseerd op Alpine Linux met Node.js v
 
 ## Gebruik
 
-### Met Docker Compose (aanbevolen)
+### Pre-built Images (Raspberry Pi 4 & AMD64)
+
+De makkelijkste manier om te starten is door de pre-built images te gebruiken die automatisch gebouwd worden voor zowel AMD64 als ARM64 (Raspberry Pi 4):
+
+**Voor Raspberry Pi 4 en andere platforms:**
+
+1. Maak een `docker-compose.yml` bestand:
+```yaml
+version: '3.8'
+
+services:
+  homebridge:
+    image: ghcr.io/sebasvv/homebridge-alpinelinux:latest
+    container_name: homebridge
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./homebridge:/homebridge
+    environment:
+      - TZ=Europe/Amsterdam
+```
+
+2. Start de container:
+```bash
+docker-compose up -d
+```
+
+De juiste image voor jouw platform (ARM64 voor Pi 4, AMD64 voor PC) wordt automatisch gedownload.
+
+### Zelf bouwen met Docker Compose
 
 1. Clone deze repository:
 ```bash
@@ -34,14 +64,33 @@ docker-compose up -d
 http://localhost:8581
 ```
 
-### Met Docker
+### Met Docker (pre-built image)
 
-1. Build de image:
+Direct starten zonder te bouwen:
+
+```bash
+docker run -d \
+  --name homebridge \
+  --network host \
+  -v $(pwd)/homebridge:/homebridge \
+  -e TZ=Europe/Amsterdam \
+  ghcr.io/sebasvv/homebridge-alpinelinux:latest
+```
+
+### Zelf bouwen met Docker
+
+1. Clone de repository:
+```bash
+git clone https://github.com/sebasvv/Homebridge-AlpineLinux.git
+cd Homebridge-AlpineLinux
+```
+
+2. Build de image:
 ```bash
 docker build -t homebridge-alpine .
 ```
 
-2. Run de container:
+3. Run de container:
 ```bash
 docker run -d \
   --name homebridge \
@@ -98,6 +147,14 @@ Deze Alpine-gebaseerde image is significant kleiner dan vergelijkbare Debian/Ubu
 - Snellere downloads
 - Minder opslagruimte
 - Kleinere attack surface
+
+## Ondersteunde Platforms
+
+De pre-built images worden automatisch gebouwd voor:
+- **linux/amd64**: Standaard PC's en servers
+- **linux/arm64**: Raspberry Pi 4, Raspberry Pi 5, en andere ARM64 devices
+
+De images worden automatisch gebouwd via GitHub Actions bij elke push naar de main branch.
 
 ## Licentie
 

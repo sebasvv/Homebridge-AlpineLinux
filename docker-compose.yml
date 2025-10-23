@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  homebridge:
+    build: .
+    container_name: homebridge
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./homebridge:/homebridge
+    environment:
+      - TZ=Europe/Amsterdam
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

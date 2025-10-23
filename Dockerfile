@@ -1,16 +1,16 @@
 FROM node:22-alpine
 
-# Set working directory
-WORKDIR /homebridge
-
 # Install Homebridge globally
 RUN npm install -g --unsafe-perm homebridge homebridge-config-ui-x
 
-# Create user and set permissions
-RUN addgroup -g 1000 homebridge && \
-    adduser -D -u 1000 -G homebridge homebridge && \
+# Create homebridge user and group (without fixed UID/GID to avoid conflicts)
+RUN addgroup -S homebridge && \
+    adduser -S -G homebridge homebridge && \
     mkdir -p /homebridge && \
     chown -R homebridge:homebridge /homebridge
+
+# Set working directory
+WORKDIR /homebridge
 
 # Switch to homebridge user
 USER homebridge

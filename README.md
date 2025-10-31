@@ -14,8 +14,8 @@ Een minimale Homebridge Docker container gebaseerd op Alpine Linux met Node.js v
 
 ## Vereisten
 
-- Docker
-- Docker Compose (optioneel, maar aanbevolen)
+- Docker of Podman
+- Docker Compose / Podman Compose (optioneel, maar aanbevolen)
 
 ## Gebruik
 
@@ -102,6 +102,88 @@ docker run -d \
   homebridge-alpine
 ```
 
+### Met Podman
+
+Podman is een daemonless container engine die volledig compatibel is met Docker containers. Ideaal voor systemen waar je geen Docker daemon wilt draaien.
+
+#### Podman Run (pre-built image)
+
+```bash
+podman run -d \
+  --name homebridge \
+  --network host \
+  -v $(pwd)/homebridge:/homebridge:Z \
+  -e TZ=Europe/Amsterdam \
+  ghcr.io/sebasvv/homebridge-alpinelinux:latest
+```
+
+**Opmerking:** De `:Z` flag bij de volume mount zorgt voor correcte SELinux labels (belangrijk op Fedora/RHEL systemen).
+
+#### Podman Compose
+
+1. Installeer podman-compose (als je dat nog niet hebt):
+```bash
+# Fedora/RHEL
+sudo dnf install podman-compose
+
+# Of via pip
+pip3 install podman-compose
+```
+
+2. Gebruik dezelfde `docker-compose.yml` zoals hierboven:
+```bash
+podman-compose up -d
+```
+
+#### Podman met Systemd (automatisch starten bij boot)
+
+Voor een productie setup kun je Podman gebruiken met systemd om de container automatisch te starten:
+
+1. Start de container eerst handmatig:
+```bash
+podman run -d \
+  --name homebridge \
+  --network host \
+  -v $(pwd)/homebridge:/homebridge:Z \
+  -e TZ=Europe/Amsterdam \
+  ghcr.io/sebasvv/homebridge-alpinelinux:latest
+```
+
+2. Genereer een systemd service file:
+```bash
+podman generate systemd --name homebridge --files --new
+```
+
+3. Installeer de service:
+```bash
+mkdir -p ~/.config/systemd/user/
+mv container-homebridge.service ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable container-homebridge.service
+systemctl --user start container-homebridge.service
+```
+
+4. Enable lingering (zodat de service blijft draaien na uitloggen):
+```bash
+loginctl enable-linger $USER
+```
+
+**Logs bekijken met Podman:**
+```bash
+podman logs -f homebridge
+```
+
+**Container herstarten met Podman:**
+```bash
+podman restart homebridge
+```
+
+**Container stoppen met Podman:**
+```bash
+podman stop homebridge
+podman rm homebridge
+```
+
 ## Configuratie
 
 De Homebridge configuratie wordt opgeslagen in de `./homebridge` directory. Bij eerste gebruik wordt deze automatisch aangemaakt.
@@ -121,26 +203,55 @@ Bij eerste gebruik:
 
 ## Logs bekijken
 
+Met Docker Compose:
 ```bash
 docker-compose logs -f
 ```
 
-of met Docker:
-
+Met Docker:
 ```bash
 docker logs -f homebridge
 ```
 
+Met Podman:
+```bash
+podman logs -f homebridge
+```
+
 ## Container herstarten
 
+Met Docker Compose:
 ```bash
 docker-compose restart
 ```
 
+Met Docker:
+```bash
+docker restart homebridge
+```
+
+Met Podman:
+```bash
+podman restart homebridge
+```
+
 ## Container stoppen
 
+Met Docker Compose:
 ```bash
 docker-compose down
+```
+
+Met Docker:
+```bash
+docker stop homebridge
+docker rm homebridge
+```
+
+Met Podman:
+```bash
+podman stop homebridge
+podman rm homebridge
 ```
 
 ## Image grootte

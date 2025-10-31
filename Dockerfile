@@ -1,5 +1,8 @@
 FROM node:22-alpine
 
+# Install su-exec for dropping privileges
+RUN apk add --no-cache su-exec
+
 # Install Homebridge globally
 RUN npm install -g --unsafe-perm homebridge homebridge-config-ui-x
 
@@ -9,11 +12,12 @@ RUN addgroup -S homebridge && \
     mkdir -p /homebridge && \
     chown -R homebridge:homebridge /homebridge
 
+# Copy entrypoint script
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 # Set working directory
 WORKDIR /homebridge
-
-# Switch to homebridge user
-USER homebridge
 
 # Expose ports
 # 8581 - Homebridge UI
@@ -23,5 +27,5 @@ EXPOSE 8581 51826
 # Volume for configuration
 VOLUME /homebridge
 
-# Start Homebridge
-CMD ["homebridge", "-I", "-U", "/homebridge"]
+# Use entrypoint script to handle permissions and run as homebridge user
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

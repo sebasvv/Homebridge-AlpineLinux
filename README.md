@@ -1,5 +1,7 @@
 # Homebridge Alpine Linux
 
+[![Build Multi-Arch Docker Image](https://github.com/sebasvv/Homebridge-AlpineLinux/actions/workflows/docker-build.yml/badge.svg)](https://github.com/sebasvv/Homebridge-AlpineLinux/actions/workflows/docker-build.yml)
+
 Een minimale Homebridge Docker container gebaseerd op Alpine Linux met Node.js v22.
 
 ## Kenmerken

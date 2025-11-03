@@ -29,8 +29,7 @@ if [ "$CREATE_CONFIG" = "1" ]; then
         "name": "Homebridge",
         "username": "CC:22:3D:E3:CE:30",
         "port": 51826,
-        "pin": "031-45-154",
-        "advertiser": "avahi"
+        "pin": "031-45-154"
     },
     "accessories": [],
     "platforms": [
@@ -54,15 +53,6 @@ EOF
     echo "Default login: admin / admin"
     echo "============================================"
 fi
-
-# Start dbus (required for avahi)
-echo "Starting dbus..."
-mkdir -p /var/run/dbus
-dbus-daemon --system --fork
-
-# Start avahi-daemon for mDNS/Bonjour (required for HomeKit discovery)
-echo "Starting avahi-daemon..."
-avahi-daemon --daemonize --no-chroot
 
 # Switch to homebridge user and run homebridge
 echo "Starting Homebridge..."

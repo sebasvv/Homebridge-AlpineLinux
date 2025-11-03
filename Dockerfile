@@ -1,15 +1,7 @@
 FROM node:22-alpine
 
-# Install system dependencies
-# - su-exec: for dropping privileges
-# - avahi: for mDNS/Bonjour service discovery (required for HomeKit)
-# - avahi-compat-libdns_sd: compatibility library for Bonjour
-# - dbus: required by avahi
-RUN apk add --no-cache \
-    su-exec \
-    avahi \
-    avahi-compat-libdns_sd \
-    dbus
+# Install su-exec for dropping privileges
+RUN apk add --no-cache su-exec
 
 # Install Homebridge globally
 RUN npm install -g --unsafe-perm homebridge homebridge-config-ui-x

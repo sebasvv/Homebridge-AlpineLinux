@@ -34,14 +34,10 @@ if [ "$CREATE_CONFIG" = "1" ]; then
     "accessories": [],
     "platforms": [
         {
+            "platform": "config",
             "name": "Config",
-            "port": 8581,
-            "bind": "0.0.0.0",
-            "auth": "form",
-            "theme": "auto",
-            "tempUnits": "c",
-            "lang": "auto",
-            "platform": "config"
+            "port": 8080,
+            "sudo": false
         }
     ]
 }

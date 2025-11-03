@@ -24,6 +24,7 @@ if [ ! -f "/homebridge/config.json" ] || [ ! -s "/homebridge/config.json" ]; the
         {
             "name": "Config",
             "port": 8581,
+            "bind": "0.0.0.0",
             "auth": "form",
             "theme": "auto",
             "tempUnits": "c",

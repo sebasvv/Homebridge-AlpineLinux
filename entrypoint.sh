@@ -7,9 +7,22 @@ if [ -d "/homebridge" ]; then
     chown -R homebridge:homebridge /homebridge
 fi
 
-# Create default config.json if it doesn't exist or is empty/invalid
+# Check if config needs to be created or upgraded
+CREATE_CONFIG=0
+
 if [ ! -f "/homebridge/config.json" ] || [ ! -s "/homebridge/config.json" ]; then
-    echo "Creating default config.json..."
+    echo "Config.json missing or empty, will create new one..."
+    CREATE_CONFIG=1
+elif ! grep -q '"bind"' /homebridge/config.json; then
+    echo "Old config.json detected (missing bind setting), upgrading..."
+    # Backup old config
+    cp /homebridge/config.json /homebridge/config.json.backup
+    echo "Backup saved to config.json.backup"
+    CREATE_CONFIG=1
+fi
+
+if [ "$CREATE_CONFIG" = "1" ]; then
+    echo "Creating/updating config.json..."
     cat > /homebridge/config.json <<'EOF'
 {
     "bridge": {
@@ -36,7 +49,7 @@ if [ ! -f "/homebridge/config.json" ] || [ ! -s "/homebridge/config.json" ]; the
 EOF
     chown homebridge:homebridge /homebridge/config.json
     echo "============================================"
-    echo "Default config.json created!"
+    echo "Config.json ready!"
     echo "Access the Config UI at: http://<host-ip>:8581"
     echo "Default login: admin / admin"
     echo "============================================"

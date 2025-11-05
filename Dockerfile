@@ -6,6 +6,10 @@ RUN apk add --no-cache su-exec
 # Install Homebridge globally
 RUN npm install -g --unsafe-perm homebridge homebridge-config-ui-x
 
+# Enable Config UI X (required for Docker environments)
+ENV HOMEBRIDGE_CONFIG_UI=1 \
+    UIX_CUSTOM_PLUGIN_PATH=/homebridge/node_modules
+
 # Create homebridge user and group (without fixed UID/GID to avoid conflicts)
 RUN addgroup -S homebridge && \
     adduser -S -G homebridge homebridge && \

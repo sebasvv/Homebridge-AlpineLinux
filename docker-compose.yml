@@ -10,6 +10,7 @@ services:
       - ./homebridge:/homebridge
     environment:
       - TZ=Europe/Amsterdam
+      - HOMEBRIDGE_CONFIG_UI=1
     logging:
       driver: "json-file"
       options:

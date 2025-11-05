@@ -39,6 +39,7 @@ services:
       - ./homebridge:/homebridge
     environment:
       - TZ=Europe/Amsterdam
+      - HOMEBRIDGE_CONFIG_UI=1
 ```
 
 2. Start de container:
@@ -76,6 +77,7 @@ docker run -d \
   --network host \
   -v $(pwd)/homebridge:/homebridge \
   -e TZ=Europe/Amsterdam \
+  -e HOMEBRIDGE_CONFIG_UI=1 \
   ghcr.io/sebasvv/homebridge-alpinelinux:latest
 ```
 
@@ -114,6 +116,7 @@ podman run -d \
   --network host \
   -v $(pwd)/homebridge:/homebridge:Z \
   -e TZ=Europe/Amsterdam \
+  -e HOMEBRIDGE_CONFIG_UI=1 \
   ghcr.io/sebasvv/homebridge-alpinelinux:latest
 ```
 
@@ -146,6 +149,7 @@ podman run -d \
   --network host \
   -v $(pwd)/homebridge:/homebridge:Z \
   -e TZ=Europe/Amsterdam \
+  -e HOMEBRIDGE_CONFIG_UI=1 \
   ghcr.io/sebasvv/homebridge-alpinelinux:latest
 ```
 

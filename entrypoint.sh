@@ -23,6 +23,8 @@ fi
 
 if [ "$CREATE_CONFIG" = "1" ]; then
     echo "Creating/updating config.json..."
+    # When HOMEBRIDGE_CONFIG_UI=1, Config UI X starts automatically
+    # No need to add it to platforms array
     cat > /homebridge/config.json <<'EOF'
 {
     "bridge": {
@@ -32,23 +34,13 @@ if [ "$CREATE_CONFIG" = "1" ]; then
         "pin": "031-45-154"
     },
     "accessories": [],
-    "platforms": [
-        {
-            "name": "Config",
-            "port": 8581,
-            "bind": "0.0.0.0",
-            "auth": "form",
-            "theme": "auto",
-            "tempUnits": "c",
-            "lang": "auto",
-            "platform": "config"
-        }
-    ]
+    "platforms": []
 }
 EOF
     chown homebridge:homebridge /homebridge/config.json
     echo "============================================"
     echo "Config.json ready!"
+    echo "HOMEBRIDGE_CONFIG_UI=1 will auto-start the UI"
     echo "Access the Config UI at: http://<host-ip>:8581"
     echo "Default login: admin / admin"
     echo "============================================"

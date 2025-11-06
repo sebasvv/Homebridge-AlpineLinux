@@ -51,6 +51,6 @@ EOF
     echo "============================================"
 fi
 
-# Switch to homebridge user and run homebridge
-echo "Starting Homebridge..."
-exec su-exec homebridge homebridge -U /homebridge
+# Start Homebridge using hb-service (this starts both Homebridge AND Config UI X)
+echo "Starting Homebridge with Config UI X..."
+exec su-exec homebridge hb-service run --allow-root -U /homebridge

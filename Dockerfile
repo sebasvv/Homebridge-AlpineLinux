@@ -1,5 +1,7 @@
 FROM node:22-alpine
 
+# Minimal Homebridge container with Config UI X support
+# This container uses hb-service to properly start both Homebridge and Config UI X
 # Install su-exec for dropping privileges
 RUN apk add --no-cache su-exec
 

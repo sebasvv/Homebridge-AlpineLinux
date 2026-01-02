@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  sut: # System Under Test
+    build: .
+    image: homebridge-alpine:test
+    container_name: homebridge-test
+    environment:
+      - TZ=Europe/Amsterdam
+      - HOMEBRIDGE_CONFIG_UI=1
+      - HOMEBRIDGE_NAME=TestBridge
+      - HOMEBRIDGE_PIN=111-22-333
+    volumes:
+      - ./tests/vol:/homebridge
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "-s", "http://localhost:8581/"]
+      interval: 5s
+      timeout: 5s
+      retries: 5

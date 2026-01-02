@@ -1,6 +1,8 @@
 name: Docker Publish
 
 on:
+  schedule:
+    - cron: '0 4 * * *' # Run daily at 4:00 AM UTC
   push:
     branches: [ "main" ]
     # Publish semver tags as releases.
@@ -16,10 +18,53 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  check-updates:
+    runs-on: ubuntu-latest
+    outputs:
+      should_build: ${{ steps.check.outputs.should_build }}
+      sig_tag: ${{ steps.check.outputs.sig_tag }}
+      hb_version: ${{ steps.check.outputs.hb_version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all tags for history check
+
+      - name: Check for updates
+        id: check
+        run: |
+          if [ "${{ github.event_name }}" == "schedule" ]; then
+            python3 scripts/check_updates.py
+          else
+            # Always build on manual push/workflow_dispatch
+            echo "should_build=true" >> $GITHUB_OUTPUT
+            # Fetch HB version for tagging
+            VER=$(npm view homebridge version)
+            echo "hb_version=$VER" >> $GITHUB_OUTPUT
+            # Generate a random sig tag to ensure unique build
+            echo "sig_tag=manual-${{ github.sha }}" >> $GITHUB_OUTPUT
+          fi
+
+  test:
+    needs: check-updates
+    if: needs.check-updates.outputs.should_build == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Make scripts executable
+        run: chmod +x tests/run_tests.sh
+
+      - name: Run Integration Tests
+        run: ./tests/run_tests.sh
+
   build:
+    needs: [check-updates, test]
+    if: needs.check-updates.outputs.should_build == 'true'
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write # Needed for pushing tags
       packages: write
       # This is used to complete the identity challenge
       # with sigstore/fulcio when running outside of PRs.
@@ -47,6 +92,21 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Generate Version & Tags
+        id: versioning
+        run: |
+          HB_VER="${{ needs.check-updates.outputs.hb_version }}"
+          RUN_NUM="${{ github.run_number }}"
+          # Version Format: 1.8.4-123 (SemVer compliant)
+          NEW_VERSION="v${HB_VER}-${RUN_NUM}"
+          
+          echo "version=${NEW_VERSION}" >> $GITHUB_OUTPUT
+          
+          echo "Tags to push:"
+          echo "  latest"
+          echo "  ${NEW_VERSION}"
+          echo "  ${HB_VER}"
+
       # Extract metadata (tags, labels) for Docker
       # https://github.com/docker/metadata-action
       - name: Extract Docker metadata
@@ -56,8 +116,8 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
-            type=ref,event=branch
-            type=ref,event=tag
+            type=raw,value=${{ steps.versioning.outputs.version }}
+            type=raw,value=${{ needs.check-updates.outputs.hb_version }}
             type=sha,format=long
 
       # Build and push Docker image with Buildx (don't push on PR)
@@ -74,3 +134,21 @@ jobs:
           platforms: linux/amd64,linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # Push the signature tag and the new version tag so future checks know we built this
+      - name: Push Git Tags
+        if: github.event_name != 'pull_request'
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          
+          SIG_TAG="${{ needs.check-updates.outputs.sig_tag }}"
+          VERSION_TAG="${{ steps.versioning.outputs.version }}"
+          
+          # Tag the signature (to know we've built this combination)
+          git tag $SIG_TAG
+          git push origin $SIG_TAG
+          
+          # Tag the version (for release history)
+          git tag $VERSION_TAG
+          git push origin $VERSION_TAG

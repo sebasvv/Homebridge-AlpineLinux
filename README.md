@@ -1,31 +1,33 @@
-# Homebridge Alpine Linux
+# Homebridge Alpine Linux (Raspberry Pi 4 Optimized)
 
-[![Build Multi-Arch Docker Image](https://github.com/sebasvv/Homebridge-AlpineLinux/actions/workflows/docker-build.yml/badge.svg)](https://github.com/sebasvv/Homebridge-AlpineLinux/actions/workflows/docker-build.yml)
+[![Build Multi-Arch Docker Image](https://github.com/sebasvv/Homebridge-AlpineLinux/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/sebasvv/Homebridge-AlpineLinux/actions/workflows/docker-publish.yml)
 
-Een minimale Homebridge Docker container gebaseerd op Alpine Linux met Node.js v22.
+Een sterk geoptimaliseerde, minimale Homebridge Docker container gebaseerd op Alpine Linux met **Node.js v24**.
+Specifiek getuned voor maximale stabiliteit en performance op een **Raspberry Pi 4**, maar werkt ook perfect op andere systemen.
 
-## Kenmerken
+## 🚀 Kenmerken
 
-- **Minimale image**: Gebouwd op Alpine Linux voor een kleine footprint
-- **Node.js v22**: Laatste LTS versie van Node.js
-- **Homebridge**: Met Homebridge Config UI X voor eenvoudig beheer
-- **Geen onnodige dependencies**: ffmpeg en andere grote packages zijn niet geïnstalleerd
-- **Multi-architecture**: Ondersteunt AMD64 en ARM64 (Raspberry Pi 4)
+- **Minimale footprint**: Gebouwd op Alpine Linux.
+- **Node.js v24**: Laatste versie voor maximale performance.
+- **Raspberry Pi 4 Optimized**:
+  - **Hardware Acceleratie**: Inclusief `ffmpeg` met toegang tot Pi GPU (`/dev/dri`) voor soepele camera streams.
+  - **Memory Management**: Getunede Node.js Garbage Collection om de Pi responsief te houden.
+  - **SD-Card Friendly**: Gebruikt `tmpfs` (RAM disk) voor tijdelijke bestanden om slijtage aan je SD-kaart te voorkomen.
+- **Homebridge + Config UI X**: Volledig beheerbaar via web interface.
+- **Broad Compatibility**: Inclusief `python3`, `make`, `g++`, `git` en `openssl` voor correcte installatie van zware plugins (zoals Zigbee2MQTT, Camera UI).
+- **Multi-architecture**: Ondersteunt AMD64 en ARM64 (Raspberry Pi 4/5).
 
-## Vereisten
+## 🛠 Vereisten
 
-- Docker of Podman
-- Docker Compose / Podman Compose (optioneel, maar aanbevolen)
+- Docker
+- Docker Compose (aanbevolen)
 
-## Gebruik
+## 📦 Snel Starten (Raspberry Pi 4 & AMD64)
 
-### Pre-built Images (Raspberry Pi 4 & AMD64)
-
-De makkelijkste manier om te starten is door de pre-built images te gebruiken die automatisch gebouwd worden voor zowel AMD64 als ARM64 (Raspberry Pi 4):
-
-**Voor Raspberry Pi 4 en andere platforms:**
+De makkelijkste manier is gebruik maken van de pre-built image via `ghcr.io`.
 
 1. Maak een `docker-compose.yml` bestand:
+
 ```yaml
 version: '3.8'
 
@@ -37,9 +39,33 @@ services:
     network_mode: host
     volumes:
       - ./homebridge:/homebridge
+    # "Memory Only" operatie: Verlaagt SD-kaart writes
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=100m
+      - /run:rw,noexec,nosuid,size=100m
     environment:
       - TZ=Europe/Amsterdam
       - HOMEBRIDGE_CONFIG_UI=1
+      # Node.js Tuning voor 1GB/2GB/4GB Pi's
+      - NODE_OPTIONS=--max-old-space-size=512 --initial-old-space-size=64
+      # Optioneel: Stel je bridge alvast in (handig voor headless setup)
+      - HOMEBRIDGE_NAME=MijnHomebridge
+      - HOMEBRIDGE_PIN=031-45-154
+    # Hardware acceleratie voor camera's (Pi 4)
+    devices:
+      - /dev/dri:/dev/dri
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "1"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'   # Voorkom dat Homebridge de hele Pi ophangt
+          memory: 1G
+        reservations:
+          memory: 128M
 ```
 
 2. Start de container:
@@ -47,231 +73,45 @@ services:
 docker-compose up -d
 ```
 
-De juiste image voor jouw platform (ARM64 voor Pi 4, AMD64 voor PC) wordt automatisch gedownload.
+3. Open de UI op `http://<jouw-ip>:8581` (Login: `admin` / `admin`).
 
-### Zelf bouwen met Docker Compose
+## ⚙️ Configuratie via Environment Variabelen
 
-1. Clone deze repository:
+Je kunt de initiële `config.json` beïnvloeden met de volgende variabelen. Dit werkt alleen als er nog **geen** `config.json` bestaat.
+
+| Variabele | Standaard | Omschrijving |
+|-----------|-----------|--------------|
+| `HOMEBRIDGE_CONFIG_UI` | `1` | Zet op `1` om de UI te activeren (verplicht). |
+| `HOMEBRIDGE_NAME` | `Homebridge` | Naam van de bridge in HomeKit. |
+| `HOMEBRIDGE_PIN` | `031-45-154` | De koppelcode voor HomeKit. |
+| `HOMEBRIDGE_USERNAME` | `CC:22:3D:E3:CE:30` | MAC-adres van de bridge. |
+| `HOMEBRIDGE_PORT` | `51826` | Poort voor HomeKit protocol. |
+| `NODE_OPTIONS` | (zie yaml) | Tuning parameters voor Node.js memory gebruik. |
+
+## 🏗 Zelf Bouwen
+
+Wil je zelf wijzigingen aanbrengen in de image?
+
+1. Clone de repo:
 ```bash
 git clone https://github.com/sebasvv/Homebridge-AlpineLinux.git
 cd Homebridge-AlpineLinux
 ```
 
-2. Start de container:
+2. Pas eventueel `Dockerfile` aan.
+
+3. Bouw en start:
 ```bash
-docker-compose up -d
+docker-compose up -d --build
 ```
 
-3. Open de Homebridge UI in je browser:
-```
-http://localhost:8581
-```
+## 🛡 Stabiliteit & Performance
 
-### Met Docker (pre-built image)
-
-Direct starten zonder te bouwen:
-
-```bash
-docker run -d \
-  --name homebridge \
-  --network host \
-  -v $(pwd)/homebridge:/homebridge \
-  -e TZ=Europe/Amsterdam \
-  -e HOMEBRIDGE_CONFIG_UI=1 \
-  ghcr.io/sebasvv/homebridge-alpinelinux:latest
-```
-
-### Zelf bouwen met Docker
-
-1. Clone de repository:
-```bash
-git clone https://github.com/sebasvv/Homebridge-AlpineLinux.git
-cd Homebridge-AlpineLinux
-```
-
-2. Build de image:
-```bash
-docker build -t homebridge-alpine .
-```
-
-3. Run de container:
-```bash
-docker run -d \
-  --name homebridge \
-  --network host \
-  -v $(pwd)/homebridge:/homebridge \
-  -e TZ=Europe/Amsterdam \
-  homebridge-alpine
-```
-
-### Met Podman
-
-Podman is een daemonless container engine die volledig compatibel is met Docker containers. Ideaal voor systemen waar je geen Docker daemon wilt draaien.
-
-#### Podman Run (pre-built image)
-
-```bash
-podman run -d \
-  --name homebridge \
-  --network host \
-  -v $(pwd)/homebridge:/homebridge:Z \
-  -e TZ=Europe/Amsterdam \
-  -e HOMEBRIDGE_CONFIG_UI=1 \
-  ghcr.io/sebasvv/homebridge-alpinelinux:latest
-```
-
-**Opmerking:** De `:Z` flag bij de volume mount zorgt voor correcte SELinux labels (belangrijk op Fedora/RHEL systemen).
-
-#### Podman Compose
-
-1. Installeer podman-compose (als je dat nog niet hebt):
-```bash
-# Fedora/RHEL
-sudo dnf install podman-compose
-
-# Of via pip
-pip3 install podman-compose
-```
-
-2. Gebruik dezelfde `docker-compose.yml` zoals hierboven:
-```bash
-podman-compose up -d
-```
-
-#### Podman met Systemd (automatisch starten bij boot)
-
-Voor een productie setup kun je Podman gebruiken met systemd om de container automatisch te starten:
-
-1. Start de container eerst handmatig:
-```bash
-podman run -d \
-  --name homebridge \
-  --network host \
-  -v $(pwd)/homebridge:/homebridge:Z \
-  -e TZ=Europe/Amsterdam \
-  -e HOMEBRIDGE_CONFIG_UI=1 \
-  ghcr.io/sebasvv/homebridge-alpinelinux:latest
-```
-
-2. Genereer een systemd service file:
-```bash
-podman generate systemd --name homebridge --files --new
-```
-
-3. Installeer de service:
-```bash
-mkdir -p ~/.config/systemd/user/
-mv container-homebridge.service ~/.config/systemd/user/
-systemctl --user daemon-reload
-systemctl --user enable container-homebridge.service
-systemctl --user start container-homebridge.service
-```
-
-4. Enable lingering (zodat de service blijft draaien na uitloggen):
-```bash
-loginctl enable-linger $USER
-```
-
-**Logs bekijken met Podman:**
-```bash
-podman logs -f homebridge
-```
-
-**Container herstarten met Podman:**
-```bash
-podman restart homebridge
-```
-
-**Container stoppen met Podman:**
-```bash
-podman stop homebridge
-podman rm homebridge
-```
-
-## Configuratie
-
-De Homebridge configuratie wordt opgeslagen in de `./homebridge` directory. Bij eerste gebruik wordt deze automatisch aangemaakt.
-
-## Poorten
-
-- **8581**: Homebridge Config UI X
-- **51826**: HomeKit Accessory Protocol (HAP)
-
-## Standaard inloggegevens Config UI
-
-Bij eerste gebruik:
-- **Gebruikersnaam**: admin
-- **Wachtwoord**: admin
-
-⚠️ Wijzig deze inloggegevens direct na eerste gebruik!
-
-## Logs bekijken
-
-Met Docker Compose:
-```bash
-docker-compose logs -f
-```
-
-Met Docker:
-```bash
-docker logs -f homebridge
-```
-
-Met Podman:
-```bash
-podman logs -f homebridge
-```
-
-## Container herstarten
-
-Met Docker Compose:
-```bash
-docker-compose restart
-```
-
-Met Docker:
-```bash
-docker restart homebridge
-```
-
-Met Podman:
-```bash
-podman restart homebridge
-```
-
-## Container stoppen
-
-Met Docker Compose:
-```bash
-docker-compose down
-```
-
-Met Docker:
-```bash
-docker stop homebridge
-docker rm homebridge
-```
-
-Met Podman:
-```bash
-podman stop homebridge
-podman rm homebridge
-```
-
-## Image grootte
-
-Deze Alpine-gebaseerde image is significant kleiner dan vergelijkbare Debian/Ubuntu-gebaseerde images, wat resulteert in:
-- Snellere downloads
-- Minder opslagruimte
-- Kleinere attack surface
-
-## Ondersteunde Platforms
-
-De pre-built images worden automatisch gebouwd voor:
-- **linux/amd64**: Standaard PC's en servers
-- **linux/arm64**: Raspberry Pi 4, Raspberry Pi 5, en andere ARM64 devices
-
-De images worden automatisch gebouwd via GitHub Actions bij elke push naar de main branch.
+Dit project is ontworpen met stabiliteit als prioriteit:
+- **Automatic Healthchecks**: Docker herstart de container als de web UI onbereikbaar wordt.
+- **Resource Limits**: Harde limieten op CPU en Geheugen voorkomen dat een lekke plugin je hele Pi laat crashen.
+- **Timezone Sync**: Correcte tijden in logs dankzij `tzdata` en `TZ` variabele.
+- **Rechtenherstel**: `entrypoint.sh` controleert en repareert permissies van `/homebridge` indien nodig.
 
 ## Licentie
 

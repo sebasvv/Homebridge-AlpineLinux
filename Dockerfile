@@ -1,4 +1,4 @@
-FROM node:24-alpine
+FROM node:25-alpine
 
 # Minimal Homebridge container with Config UI X support
 # Optimized for stability and low resource usage

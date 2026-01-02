@@ -1,17 +1,17 @@
 FROM node:24-alpine
 
-# Use optimized Alpine base for Raspberry Pi 4 (ARM64/v7)
-# Optimized for stability, low resource usage, and camera support
+# Minimal Homebridge container with Config UI X support
+# Optimized for stability and low resource usage 
 
-# Install essential packages
-# python3, make, g++: Native module compilation
-# git: Git plugins
-# tzdata: Timezones
-# curl: Healthcheck
+# Install essential packages for plugin compilation and system health
+# python3, make, g++: Required for native node modules (gyp)
+# git: Required for some plugins installed from git repos
+# tzdata: Required for correct timezone handling
+# curl: Used for Healthcheck
 # ffmpeg: Hardware accelerated video streaming for Pi 4
 # libc6-compat: Compatibility layer for prebuilt glibc binaries on Alpine
 # openssl: Security
-# su-exec: Privilege drop
+# su-exec: For dropping privileges securely
 RUN apk add --no-cache \
     su-exec \
     python3 \

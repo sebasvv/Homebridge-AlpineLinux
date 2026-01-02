@@ -68,5 +68,5 @@ else
 fi
 
 echo "🎉 All tests passed successfully!"
-docker-compose -f tests/docker-compose.test.yml down -v
+docker compose -f tests/docker-compose.test.yml down -v
 rm -rf tests/vol

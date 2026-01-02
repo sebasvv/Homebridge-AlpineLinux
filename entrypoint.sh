@@ -68,7 +68,8 @@ if [ ! -z "$HOMEBRIDGE_PLUGINS" ]; then
     PLUGINS=$(echo $HOMEBRIDGE_PLUGINS | tr ',' ' ')
     for PLUGIN in $PLUGINS; do
         echo "Installing $PLUGIN..."
-        npm install --unsafe-perm "$PLUGIN"
+        # Install as homebridge user to avoid permission issues
+        su-exec homebridge npm install "$PLUGIN"
     done
 fi
 
@@ -82,4 +83,5 @@ fi
 # Start Homebridge using hb-service (this starts both Homebridge AND Config UI X)
 echo "Starting Homebridge with Config UI X..."
 echo "Container optimized for: $(node -v)"
-exec su-exec homebridge hb-service run --allow-root -U /homebridge
+# Use --no-logs to force output to stdout/stderr (docker logs)
+exec su-exec homebridge hb-service run --allow-root --no-logs -U /homebridge

@@ -1,8 +1,8 @@
-version: '3.8'
-
 services:
   sut: # System Under Test
-    build: .
+    build:
+      context: ..
+      dockerfile: Dockerfile
     image: homebridge-alpine:test
     container_name: homebridge-test
     environment:

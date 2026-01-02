@@ -7,15 +7,15 @@ echo "🚀 Starting Integration Tests..."
 echo "🧹 Cleaning up previous runs..."
 rm -rf tests/vol
 mkdir -p tests/vol
-docker-compose -f tests/docker-compose.test.yml down -v --remove-orphans > /dev/null 2>&1
+docker compose -f tests/docker-compose.test.yml down -v --remove-orphans > /dev/null 2>&1
 
 # Build
 echo "🔨 Building image..."
-docker-compose -f tests/docker-compose.test.yml build
+docker compose -f tests/docker-compose.test.yml build
 
 # Start
 echo "▶️ Starting container..."
-docker-compose -f tests/docker-compose.test.yml up -d
+docker compose -f tests/docker-compose.test.yml up -d
 
 # Wait for Healthcheck
 echo "⏳ Waiting for Healthcheck to pass (this checks if UI is responsive)..."
@@ -35,7 +35,7 @@ done
 
 if [ "$STATUS" != "healthy" ]; then
     echo "❌ Timeout waiting for healthy status."
-    docker-compose -f tests/docker-compose.test.yml logs
+    docker compose -f tests/docker-compose.test.yml logs
     exit 1
 fi
 

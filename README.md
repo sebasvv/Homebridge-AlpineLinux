@@ -113,6 +113,20 @@ This project is designed with stability as a priority:
 - **Timezone Sync**: Correct times in logs thanks to `tzdata` and `TZ` variable.
 - **Permission Recovery**: `entrypoint.sh` checks and repairs permissions of `/homebridge` if necessary.
 
+## 🔒 Security Hardening
+
+To run this container even more securely, you can drop unused Linux capabilities. This minimizes the attack surface if the container is compromised.
+
+```yaml
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+      # - NET_ADMIN # Enable if you need low-level network access
+```
+
 ## License
 
 MIT

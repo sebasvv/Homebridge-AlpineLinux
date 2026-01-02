@@ -4,3 +4,6 @@ README.md
 .dockerignore
 homebridge/*
 !homebridge/.gitkeep
+scripts/
+.github/
+tests/vol/

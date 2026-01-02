@@ -1,7 +1,11 @@
 FROM node:24-alpine
 
 # Minimal Homebridge container with Config UI X support
-# Optimized for stability and low resource usage 
+# Optimized for stability and low resource usage
+
+LABEL org.opencontainers.image.source="https://github.com/sebasvv/Homebridge-AlpineLinux"
+LABEL org.opencontainers.image.description="Homebridge on Alpine Linux with Node.js 24, optimized for Raspberry Pi 4"
+LABEL org.opencontainers.image.licenses="MIT" 
 
 # Install essential packages for plugin compilation and system health
 # python3, make, g++: Required for native node modules (gyp)
@@ -22,7 +26,8 @@ RUN apk add --no-cache \
     curl \
     openssl \
     ffmpeg \
-    libc6-compat
+    libc6-compat \
+    tini
 
 # Install Homebridge and Config UI X globally
 # Cleaning cache significantly reduces image size
@@ -59,4 +64,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
 VOLUME /homebridge
 
 # Use entrypoint script to handle permissions and run as homebridge user
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+# Tini is used as the init process to handle signals and reap zombies
+ENTRYPOINT ["/sbin/tini", "--", "/usr/local/bin/entrypoint.sh"]

@@ -60,6 +60,25 @@ EOF
     echo "============================================"
 fi
 
+# Install plugins via environment variable (HOMEBRIDGE_PLUGINS)
+# Example: HOMEBRIDGE_PLUGINS="homebridge-dummy, homebridge-hue"
+if [ ! -z "$HOMEBRIDGE_PLUGINS" ]; then
+    echo "Installing plugins from HOMEBRIDGE_PLUGINS..."
+    # Replace commas with spaces to allow iteration
+    PLUGINS=$(echo $HOMEBRIDGE_PLUGINS | tr ',' ' ')
+    for PLUGIN in $PLUGINS; do
+        echo "Installing $PLUGIN..."
+        npm install --unsafe-perm "$PLUGIN"
+    done
+fi
+
+# Execute startup script if present
+if [ -f "/homebridge/startup.sh" ]; then
+    echo "Found /homebridge/startup.sh, executing..."
+    chmod +x /homebridge/startup.sh
+    sh /homebridge/startup.sh
+fi
+
 # Start Homebridge using hb-service (this starts both Homebridge AND Config UI X)
 echo "Starting Homebridge with Config UI X..."
 echo "Container optimized for: $(node -v)"

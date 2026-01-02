@@ -11,8 +11,12 @@ mkdir -p tests/vol
 docker compose -f tests/docker-compose.test.yml down -v --remove-orphans > /dev/null 2>&1
 
 # Build
-echo "🔨 Building image..."
-docker compose -f tests/docker-compose.test.yml build
+if [ -z "$SKIP_BUILD" ]; then
+    echo "🔨 Building image..."
+    docker compose -f tests/docker-compose.test.yml build --pull
+else
+    echo "⏭️  Skipping build (SKIP_BUILD is set)..."
+fi
 
 # Start
 echo "▶️ Starting container..."
@@ -65,6 +69,15 @@ if echo "$NODE_VER" | grep -q "v24"; then
     echo "✅ Node 24 is installed."
 else
     echo "❌ Node version mismatch. Expected v24, got $NODE_VER"
+    exit 1
+fi
+
+# Verify Plugin Auto-Install
+echo "🔍 Verifying Plugin Auto-Install..."
+if docker exec homebridge-test ls /homebridge/node_modules/homebridge-dummy/package.json >/dev/null 2>&1; then
+    echo "✅ Plugin 'homebridge-dummy' auto-installed correctly."
+else
+    echo "❌ Plugin 'homebridge-dummy' NOT found!"
     exit 1
 fi
 

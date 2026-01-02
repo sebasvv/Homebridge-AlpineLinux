@@ -10,6 +10,7 @@ services:
       - HOMEBRIDGE_CONFIG_UI=1
       - HOMEBRIDGE_NAME=TestBridge
       - HOMEBRIDGE_PIN=111-22-333
+      - HOMEBRIDGE_PLUGINS=homebridge-dummy
     volumes:
       - ./vol:/homebridge
     healthcheck:

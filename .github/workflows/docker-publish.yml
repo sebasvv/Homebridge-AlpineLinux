@@ -53,11 +53,43 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Set up QEMU for multi-arch simulation if needed
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      # Set up Docker Buildx for matching cache with build job
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Build and load the image for testing, using GitHub Actions cache
+      # This speeds up the workflow by reusing layers from previous runs
+      - name: Build and load test image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: homebridge-alpine:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Run Trivy vulnerability scanner
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: 'homebridge-alpine:test'
+          format: 'table'
+          exit-code: '0' # Don't fail the build yet, just report
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
       - name: Make scripts executable
         run: chmod +x tests/run_tests.sh
 
       - name: Run Integration Tests
         run: ./tests/run_tests.sh
+        env:
+            SKIP_BUILD: true
 
   build:
     needs: [check-updates, test]
@@ -124,7 +156,7 @@ jobs:
       # https://github.com/docker/build-push-action
       - name: Build and push Docker image
         id: build-and-push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}

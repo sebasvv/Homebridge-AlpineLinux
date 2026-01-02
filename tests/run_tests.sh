@@ -5,6 +5,7 @@ echo "🚀 Starting Integration Tests..."
 
 # Cleanup
 echo "🧹 Cleaning up previous runs..."
+[ -d "tests/vol" ] && docker run --rm -v "$(pwd)/tests/vol:/vol" alpine rm -rf /vol/* || true
 rm -rf tests/vol
 mkdir -p tests/vol
 docker compose -f tests/docker-compose.test.yml down -v --remove-orphans > /dev/null 2>&1
@@ -69,4 +70,6 @@ fi
 
 echo "🎉 All tests passed successfully!"
 docker compose -f tests/docker-compose.test.yml down -v
+# Clean up root-owned files created by the container
+[ -d "tests/vol" ] && docker run --rm -v "$(pwd)/tests/vol:/vol" alpine rm -rf /vol/* || true
 rm -rf tests/vol

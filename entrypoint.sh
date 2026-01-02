@@ -1,10 +1,19 @@
 #!/bin/sh
 set -e
 
+# Default values for configuration if not provided
+HB_NAME=${HOMEBRIDGE_NAME:-"Homebridge"}
+HB_USERNAME=${HOMEBRIDGE_USERNAME:-"CC:22:3D:E3:CE:30"}
+HB_PIN=${HOMEBRIDGE_PIN:-"031-45-154"}
+HB_PORT=${HOMEBRIDGE_PORT:-51826}
+
 # Fix ownership of /homebridge directory
 if [ -d "/homebridge" ]; then
-    echo "Fixing permissions for /homebridge..."
-    chown -R homebridge:homebridge /homebridge
+    # Only fix permissions if they are incorrect to save IO on large dirs
+    if [ "$(stat -c %U /homebridge)" != "homebridge" ]; then
+        echo "Fixing permissions for /homebridge..."
+        chown -R homebridge:homebridge /homebridge
+    fi
 fi
 
 # Check if config needs to be created or upgraded
@@ -23,13 +32,13 @@ fi
 
 if [ "$CREATE_CONFIG" = "1" ]; then
     echo "Creating/updating config.json..."
-    cat > /homebridge/config.json <<'EOF'
+    cat > /homebridge/config.json <<EOF
 {
     "bridge": {
-        "name": "Homebridge",
-        "username": "CC:22:3D:E3:CE:30",
-        "port": 51826,
-        "pin": "031-45-154"
+        "name": "${HB_NAME}",
+        "username": "${HB_USERNAME}",
+        "port": ${HB_PORT},
+        "pin": "${HB_PIN}"
     },
     "accessories": [],
     "platforms": [
@@ -53,4 +62,5 @@ fi
 
 # Start Homebridge using hb-service (this starts both Homebridge AND Config UI X)
 echo "Starting Homebridge with Config UI X..."
+echo "Container optimized for: $(node -v)"
 exec su-exec homebridge hb-service run --allow-root -U /homebridge

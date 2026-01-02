@@ -8,11 +8,29 @@ services:
     network_mode: host
     volumes:
       - ./homebridge:/homebridge
+    # Use tmpfs to prevent SD card wear
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=100m
+      - /run:rw,noexec,nosuid,size=100m
     environment:
       - TZ=Europe/Amsterdam
       - HOMEBRIDGE_CONFIG_UI=1
+      # Optimize Node.js for Pi 4 (Garbage Collection tuning)
+      - NODE_OPTIONS=--max-old-space-size=512 --initial-old-space-size=64
+    # Hardware acceleration for FFmpeg on Pi 4
+    devices:
+      - /dev/dri:/dev/dri
+      # - /dev/vchiq:/dev/vchiq # Enable for older Pi camera access if needed
     logging:
       driver: "json-file"
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: "5m"  # Reduced for SD card safety
+        max-file: "1"
+    # Resource constraints tailored for Pi 4
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'   # Leave CPU for other Pi tasks
+          memory: 1G
+        reservations:
+          memory: 128M

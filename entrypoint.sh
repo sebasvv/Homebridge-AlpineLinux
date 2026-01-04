@@ -60,6 +60,16 @@ EOF
     echo "============================================"
 fi
 
+# Disable NPM update notifications to keep logs clean
+su-exec homebridge npm config set update-notifier false
+
+# Rebuild native modules in the persistent directory to prevent errors after Node.js upgrades
+# This is crucial when the container image is updated to a new Node.js version
+if [ -d "/homebridge/node_modules" ]; then
+    echo "Checking/Rebuilding native modules in /homebridge..."
+    su-exec homebridge npm rebuild --update-notifier=false
+fi
+
 # Install plugins via environment variable (HOMEBRIDGE_PLUGINS)
 # Example: HOMEBRIDGE_PLUGINS="homebridge-dummy, homebridge-hue"
 if [ ! -z "$HOMEBRIDGE_PLUGINS" ]; then
